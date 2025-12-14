@@ -1,0 +1,45 @@
+class Request {
+    public method: string = "GET"
+    public path: string = "/"
+    public body: string = ""
+    
+    // Parses a raw HTTP string (e.g., "GET /home HTTP/1.1")
+    init(raw_data: string) {
+        var lines = raw_data.split("\r\n")
+
+        if (lines.len() > 0) {
+            // Parse the Request Line: "GET /index HTTP/1.1"
+            var first_line = lines.at(0)
+            var parts = first_line.split(" ")
+
+            if (parts.len() >= 2) {
+                this.method = parts.at(0)
+                this.path = parts.at(1)
+            }
+        }
+    }
+}
+
+class Response {
+    public status_code: int = 200
+    public content_type: string = "text/html"
+    public body: string = ""
+
+    init(body: string) {
+        // Default to 200 OK and HTML
+        this.status_code = 200
+        this.content_type = "text/html; charset=utf-8"
+        this.body = body
+    }
+
+    // Converts the object to a valid HTTP wire string
+    public to_string() {
+        var res = "HTTP/1.1 ${this.status_code} OK\r\n"
+        res += "Content-Type: ${this.content_type}\r\n"
+        res += "Content-Length: ${len(this.body)}\r\n"
+        res += "Connection: close\r\n"
+        res += "\r\n" // End of headers
+        res += this.body
+        return res
+    }
+}

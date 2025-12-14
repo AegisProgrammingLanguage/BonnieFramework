@@ -1,0 +1,14 @@
+[project]
+name = "bonnie"
+version = "0.1.0"
+description = "Aegis Web Framework"
+author = "Ethan Rucar <ethan.rucar@gmail.com>"
+license = "MIT"
+exclude = [
+    "target",
+    "Cargo.lock",
+    "Cargo.toml"
+]
+
+[dependencies]
+tera = "*"

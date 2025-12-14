@@ -1,0 +1,48 @@
+import "stdlib/socket.aeg"
+import "lib/http.aeg"
+
+interface RequestHandler {
+    handle(req)
+}
+
+class Application {
+    public host: string = "127.0.0.1"
+    public port: int = 8080
+    public routes: dict = {}
+
+    public get(path, handler) {
+        this.routes.insert(path, handler)
+    }
+
+    public run(host: string, port: int) {
+        this.host = host
+        this.port = port
+
+        var server_id = Socket.listen(this.host, this.port)
+        print "🔥 Bonnie is running on http://${this.host}:${this.port}"
+
+        while (true) {
+            var client_id = Socket.accept(server_id)
+
+            var raw_data = Socket.read(client_id, 2048)
+
+            if (raw_data.len() > 0) {
+                var req = new Request(raw_data)
+                print "[REQUEST] ${req.method} ${req.path}"
+
+                if (this.routes.get(req.path)) {
+                    var handler = this.routes.get(req.path)
+                    var response = handler.handle(req)
+                    Socket.write(client_id, response.to_string())
+                }
+                else {
+                    var not_found = new Response("<h1>404 - Not Found</h1>")
+                    not_found.status_code = 404
+                    Socket.write(client_id, not_found.to_string())
+                }
+            }
+
+            Socket.close(client_id)
+        }
+    }
+}
