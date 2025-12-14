@@ -12,3 +12,4 @@ exclude = [
 
 [dependencies]
 tera = "*"
+sqlite = "*"

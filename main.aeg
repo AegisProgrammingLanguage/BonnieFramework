@@ -1,6 +1,4 @@
 import "lib/bonnie.aeg"
-import "lib/http.aeg"
-import "lib/utils.aeg"
 import "packages/tera/tera.aeg"
 
 class HomeController implements RequestHandler {
@@ -23,7 +21,7 @@ func main() {
     app.get("/", new HomeController())
     app.get("/api", new ApiController())
 
-    app.run("127.0.0.1", 9000)
+    app.run("127.0.0.1", 9000, "db.sqlite3")
 }
 
 main()
