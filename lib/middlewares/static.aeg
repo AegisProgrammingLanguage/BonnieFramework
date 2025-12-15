@@ -1,0 +1,51 @@
+import "lib/middlewares/middleware.aeg"
+import "lib/http.aeg"
+import "stdlib/file.aeg"
+
+class StaticMiddleware implements Middleware {
+    public prefix = "/static"
+    public root = "static"
+
+    init(prefix, root) {
+        if (prefix != null) {
+            this.prefix = prefix
+        }
+
+        if (root != null) {
+            this.root = root
+        }
+    }
+
+    public handle(req) {
+        if (req.path.starts_with(this.prefix)) {
+            if (req.path.contains("..")) {
+                return new Response("Forbidden", 403)
+            }
+
+            var relative_path = req.path.slice(this.prefix.len(), req.path.len())
+            var file_path = this.root + relative_path
+
+            if (File.exists(file_path)) {
+                var content = File.read(file_path)
+                var res = new Response(content)
+
+                if (file_path.ends_with(".css")) {
+                    res.content_type = "text/css"
+                }
+                else if (file_path.ends_with(".js")) {
+                    res.content_type = "application/javascript"
+                }
+                else if (file_path.ends_with(".png")) {
+                    res.content_type = "image/png"
+                }
+                else if (file_path.ends_with(".html")) {
+                    res.content_type = "text/html"
+                }
+
+                return res
+            }
+        }
+
+        return null
+    }
+}

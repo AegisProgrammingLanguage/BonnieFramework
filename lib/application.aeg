@@ -1,5 +1,6 @@
 import "stdlib/socket.aeg"
 import "lib/http.aeg"
+import "lib/middlewares/middleware.aeg"
 import "packages/sqlite/sqlite.aeg"
 
 interface RequestHandler {
@@ -10,9 +11,14 @@ class Application {
     public host: string = "127.0.0.1"
     public port: int = 8080
     private routes: dict = {}
+    private middlewares: list = []
 
     public get(path, handler) {
         this.routes.insert(path, handler)
+    }
+
+    public use(middleware) {
+        this.middlewares.push(middleware)
     }
 
     public run(host: string, port: int) {
@@ -31,15 +37,28 @@ class Application {
                 var req = new Request(raw_data)
                 print "[REQUEST] ${req.method} ${req.path}"
 
-                if (this.routes.get(req.path)) {
-                    var handler = this.routes.get(req.path)
-                    var response = handler.handle(req)
-                    Socket.write(client_id, response.to_string())
+                var handled = false
+
+                foreach (mw in this.middlewares) {
+                    var res = mw.handle(req)
+                    if (res != null) {
+                        Socket.write(client_id, res.to_string())
+                        handled = true
+                        break
+                    }
                 }
-                else {
-                    var not_found = new Response("<h1>404 - Not Found</h1>")
-                    not_found.status_code = 404
-                    Socket.write(client_id, not_found.to_string())
+
+                if (!handled) {
+                    if (this.routes.get(req.path)) {
+                        var handler = this.routes.get(req.path)
+                        var response = handler.handle(req)
+                        Socket.write(client_id, response.to_string())
+                    }
+                    else {
+                        var not_found = new Response("<h1>404 - Not Found</h1>")
+                        not_found.status_code = 404
+                        Socket.write(client_id, not_found.to_string())
+                    }
                 }
             }
 

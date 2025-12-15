@@ -1,7 +1,7 @@
 class Request {
     public method: string = "GET"
     public path: string = "/"
-    public headers: dict = {}
+    public headers = {}
     public body: string = ""
     
     // Parses a raw HTTP string (e.g., "GET /home HTTP/1.1")

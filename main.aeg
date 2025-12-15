@@ -40,6 +40,8 @@ func main() {
 
     Sqlite.execute(Settings.db_conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL);", null)
 
+    app.use(new StaticMiddleware("/static", "static"))
+
     app.get("/", new HomeController())
     app.get("/api", new ApiController())
     app.get("/users", new UserController())
