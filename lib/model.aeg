@@ -1,0 +1,53 @@
+import "lib/settings.aeg"
+import "packages/sqlite/sqlite.aeg"
+
+class Manager {
+    private model = null
+
+    public init(model) {
+        this.model = model
+    }
+
+    public all() {
+        if (this.model.tablename == null) {
+            throw "[ERROR] Please provide a tablename."
+        }
+
+        var conn_id = Sqlite.open(Settings.database)
+
+        query = "SELECT * FROM ${this.model.tablename};"
+        var data = Sqlite.query(conn_id, query, null)
+
+        Sqlite.close(conn_id)
+
+        return data
+    }
+
+    public get(params: dict) {
+        var conn_id = Sqlite.open(Settings.database)
+
+        if (params.is_empty()) {
+            throw "Get need at least one parameter."
+        }
+
+        var keys_list = params.keys()
+        var where_list = []
+        foreach (key in keys_list) {
+            where_list.push("${key} = ?")
+        }
+
+        var where_str = where_list.join(" AND ")
+
+        var query = "SELECT * FROM ${this.model.tablename} WHERE ${where_str};"
+        var result = Sqlite.query(conn_id, query, params.values())
+
+        Sqlite.close(conn_id)
+
+        return result.at(0)
+    }
+}
+
+class Model {
+    public tablename: string = null
+    public manager = null
+}

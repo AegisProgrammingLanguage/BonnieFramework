@@ -15,13 +15,39 @@ class ApiController implements RequestHandler {
     }
 }
 
+class UserController implements RequestHandler {
+    public handle(req) {
+        var user = new User()
+        var users = user.manager.all()
+        return render("templates/users.html", {
+            users: users
+        })
+    }
+}
+
+class User extends Model {
+    init() {
+        this.tablename = "users"
+        this.manager = new Manager(this)
+    }
+}
+
 func main() {
     var app = new Application()
 
+    Settings.database = "db.sqlite3"
+
+    var conn = Sqlite.open(Settings.database)
+
+    Sqlite.execute(conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL);", null)
+
+    Sqlite.close(conn)
+
     app.get("/", new HomeController())
     app.get("/api", new ApiController())
+    app.get("/users", new UserController())
 
-    app.run("127.0.0.1", 9000, "db.sqlite3")
+    app.run("127.0.0.1", 9000)
 }
 
 main()

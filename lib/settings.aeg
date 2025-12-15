@@ -1,0 +1,3 @@
+final class Settings {
+    public static database: string = null
+}

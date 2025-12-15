@@ -10,20 +10,14 @@ class Application {
     public host: string = "127.0.0.1"
     public port: int = 8080
     private routes: dict = {}
-    private sql_conn_id: int = null
 
     public get(path, handler) {
         this.routes.insert(path, handler)
     }
 
-    public run(host: string, port: int, database_path: string) {
+    public run(host: string, port: int) {
         this.host = host
         this.port = port
-
-        if (database_path != "") {
-            this.sql_conn_id = Sqlite.open(database_path)
-            print this.sql_conn_id
-        }
 
         var server_id = Socket.listen(this.host, this.port)
         print "🔥 Bonnie is running on http://${this.host}:${this.port}"
@@ -50,10 +44,6 @@ class Application {
             }
 
             Socket.close(client_id)
-        }
-
-        if (this.sql_conn_id != null) {
-            Sqlite.close(this.conn_id)
         }
     }
 }
