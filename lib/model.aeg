@@ -13,19 +13,13 @@ class Manager {
             throw "[ERROR] Please provide a tablename."
         }
 
-        var conn_id = Sqlite.open(Settings.database)
-
         query = "SELECT * FROM ${this.model.tablename};"
-        var data = Sqlite.query(conn_id, query, null)
-
-        Sqlite.close(conn_id)
+        var data = Sqlite.query(Settings.db_conn, query, null)
 
         return data
     }
 
     public get(params: dict) {
-        var conn_id = Sqlite.open(Settings.database)
-
         if (params.is_empty()) {
             throw "Get need at least one parameter."
         }
@@ -39,9 +33,7 @@ class Manager {
         var where_str = where_list.join(" AND ")
 
         var query = "SELECT * FROM ${this.model.tablename} WHERE ${where_str};"
-        var result = Sqlite.query(conn_id, query, params.values())
-
-        Sqlite.close(conn_id)
+        var result = Sqlite.query(Settings.db_conn, query, params.values())
 
         return result.at(0)
     }

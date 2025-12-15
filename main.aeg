@@ -36,18 +36,17 @@ func main() {
     var app = new Application()
 
     Settings.database = "db.sqlite3"
+    Settings.db_conn = Sqlite.open(Settings.database)
 
-    var conn = Sqlite.open(Settings.database)
-
-    Sqlite.execute(conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL);", null)
-
-    Sqlite.close(conn)
+    Sqlite.execute(Settings.db_conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL);", null)
 
     app.get("/", new HomeController())
     app.get("/api", new ApiController())
     app.get("/users", new UserController())
 
     app.run("127.0.0.1", 9000)
+
+    Sqlite.close(Settings.db_conn)
 }
 
 main()
