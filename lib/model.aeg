@@ -13,7 +13,7 @@ class Manager {
             throw "[ERROR] Please provide a tablename."
         }
 
-        query = "SELECT * FROM ${this.model.tablename};"
+        var query = "SELECT * FROM ${this.model.tablename};"
         var data = Sqlite.query(Settings.db_conn, query, null)
 
         return data

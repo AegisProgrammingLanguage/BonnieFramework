@@ -31,35 +31,39 @@ class Application {
         while (true) {
             var client_id = Socket.accept(server_id)
 
-            var raw_data = Socket.read(client_id, 2048)
+            try {
+                var raw_data = Socket.read(client_id, 2048)
 
-            if (raw_data.len() > 0) {
-                var req = new Request(raw_data)
-                print "[REQUEST] ${req.method} ${req.path}"
+                if (raw_data.len() > 0) {
+                    var req = new Request(raw_data)
+                    print "[REQUEST] ${req.method} ${req.path}"
 
-                var handled = false
+                    var handled = false
 
-                foreach (mw in this.middlewares) {
-                    var res = mw.handle(req)
-                    if (res != null) {
-                        Socket.write(client_id, res.to_string())
-                        handled = true
-                        break
+                    foreach (mw in this.middlewares) {
+                        var res = mw.handle(req)
+                        if (res != null) {
+                            Socket.write(client_id, res.to_string())
+                            handled = true
+                            break
+                        }
+                    }
+
+                    if (!handled) {
+                        if (this.routes.get(req.path)) {
+                            var handler = this.routes.get(req.path)
+                            var response = handler.handle(req)
+                            Socket.write(client_id, response.to_string())
+                        }
+                        else {
+                            var not_found = new Response("<h1>404 - Not Found</h1>")
+                            not_found.status_code = 404
+                            Socket.write(client_id, not_found.to_string())
+                        }
                     }
                 }
-
-                if (!handled) {
-                    if (this.routes.get(req.path)) {
-                        var handler = this.routes.get(req.path)
-                        var response = handler.handle(req)
-                        Socket.write(client_id, response.to_string())
-                    }
-                    else {
-                        var not_found = new Response("<h1>404 - Not Found</h1>")
-                        not_found.status_code = 404
-                        Socket.write(client_id, not_found.to_string())
-                    }
-                }
+            } catch (e) {
+                print "[SERVER ERROR] " + e
             }
 
             Socket.close(client_id)

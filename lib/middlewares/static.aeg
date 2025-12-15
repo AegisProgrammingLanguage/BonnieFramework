@@ -27,6 +27,13 @@ class StaticMiddleware implements Middleware {
 
             if (File.exists(file_path)) {
                 var content = File.read(file_path)
+
+                if (content == null) {
+                    print "[Static] Warning: Impossible de lire le fichier (Binaire ?) -> " + file_path
+                    // On retourne null pour laisser le routeur gérer (404) ou on renvoie une erreur
+                    return null 
+                }
+
                 var res = new Response(content)
 
                 if (file_path.ends_with(".css")) {
