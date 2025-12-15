@@ -1,20 +1,37 @@
 class Request {
     public method: string = "GET"
     public path: string = "/"
+    public headers: dict = {}
     public body: string = ""
     
     // Parses a raw HTTP string (e.g., "GET /home HTTP/1.1")
     init(raw_data: string) {
-        var lines = raw_data.split("\r\n")
+        var parts = raw_data.split("\r\n\r\n")
+        var header_part = parts.at(0)
+
+        if (parts.len() > 1) {
+            this.body = parts.at(1)
+        }
+
+        var lines = header_part.split("\r\n")
 
         if (lines.len() > 0) {
-            // Parse the Request Line: "GET /index HTTP/1.1"
-            var first_line = lines.at(0)
-            var parts = first_line.split(" ")
+            // 1. Request Line
+            var req_line = lines.at(0).split(" ")
+            if (req_line.len() >= 2) {
+                this.method = req_line.at(0)
+                this.path = req_line.at(1)
+            }
 
-            if (parts.len() >= 2) {
-                this.method = parts.at(0)
-                this.path = parts.at(1)
+            // 2. Parse Headers
+            foreach (i in 1..lines.len()) {
+                var line = lines.at(i)
+                var split_idx = line.index_of(":")
+                if (split_idx != -1) {
+                    var key = line.split(": ").at(0) 
+                    var val = line.split(": ").at(1)
+                    this.headers.insert(key, val)
+                }
             }
         }
     }
