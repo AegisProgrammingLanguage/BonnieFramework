@@ -1,45 +1,185 @@
 import "lib/settings.aeg"
 import "packages/sqlite/sqlite.aeg"
 
-class Manager {
-    private model = null
+/**
+ * Bonnie ORM - Base Model
+ * * This class implements the Active Record pattern.
+ * It uses Aegis's native Reflection and Static Method Fallback features
+ * to dynamically map objects to database tables without boilerplate code.
+ */
+class Model {
+    // Primary Key (assumed to be an Integer)
+    public id = null
 
-    public init(model) {
-        this.model = model
+    // System fields that should not be included in SQL INSERT/UPDATE queries
+    private ignored_fields = ["tablename", "ignored_fields", "id"]
+
+    /**
+     * Constructor
+     * @param data (optional) A dictionary to hydrate the object immediately.
+     */
+    public init(data: dict) {
+        this.fill(data)
     }
 
-    public all() {
-        if (this.model.tablename == null) {
-            throw "[ERROR] Please provide a tablename."
+    /**
+     * Configuration: Table Name
+     * This static method MUST be overridden by subclasses.
+     * @return string The name of the database table.
+     */
+    public static table() {
+        throw "[MODEL] Error: 'table()' static method not defined in subclass."
+    }
+
+    // ========================================================================
+    // READ METHODS (Static Context)
+    // These methods are called on the class (e.g., User.all())
+    // ========================================================================
+
+    /**
+     * Fetches all records and returns a List of INSTANCES.
+     */
+    public static all() {
+        var t = this.table()
+        var query = "SELECT * FROM ${t}"
+        
+        // 1. Get raw dictionaries from DB
+        var rows = Sqlite.query(Settings.db_conn, query, null)
+        var instances = []
+
+        // 2. Hydration Loop
+        foreach (row in rows) {
+            // MAGIC HAPPENS HERE:
+            // 'this' is the Class (User). Calling it invokes the constructor logic.
+            // It passes 'row' to init(), which calls fill().
+            var obj = this(row)
+            instances.push(obj)
         }
 
-        var query = "SELECT * FROM ${this.model.tablename};"
-        var data = Sqlite.query(Settings.db_conn, query, null)
-
-        return data
+        return instances
     }
 
-    public get(params: dict) {
+    /**
+     * Fetches a single record and returns an INSTANCE.
+     */
+    public static get(params: dict) {
+        var t = this.table()
+        
         if (params.is_empty()) {
-            throw "Get need at least one parameter."
+            throw "[Model] Get needs at least one parameter."
         }
 
         var keys_list = params.keys()
         var where_list = []
-        foreach (key in keys_list) {
-            where_list.push("${key} = ?")
+        foreach (k in keys_list) {
+            where_list.push("${k} = ?")
         }
 
-        var where_str = where_list.join(" AND ")
-
-        var query = "SELECT * FROM ${this.model.tablename} WHERE ${where_str};"
+        var query = "SELECT * FROM ${t} WHERE " + where_list.join(" AND ") + ";"
         var result = Sqlite.query(Settings.db_conn, query, params.values())
 
-        return result.at(0)
-    }
-}
+        if (result.len() > 0) {
+            var row = result.at(0)
+            
+            // Hydration logic
+            return this(row)
+        }
 
-class Model {
-    public tablename: string = null
-    public manager = null
+        return null
+    }
+
+    // ========================================================================
+    // WRITE METHODS (Instance Context)
+    // These methods work on a specific object (e.g., user.save())
+    // ========================================================================
+
+    /**
+     * Hydrates the object using data from a dictionary.
+     * Uses Reflection to ensure only valid properties are set.
+     */
+    public fill(data: dict) {
+        if (data == null) {
+            return null
+        }
+
+        // Introspection: Get the list of properties defined in the class
+        var valid_props = this.get_properties()
+
+        foreach(k in data.keys()) {
+            // Security: Only set properties that actually exist in the Model
+            if (valid_props.contains(k)) {
+                var value = data.get(k)
+                
+                // Dynamic assignment (like python's setattr)
+                this.set_property(k, value)
+            }
+        }
+    } 
+
+    /**
+     * Persists the object to the database.
+     * - Performs an INSERT if 'id' is null.
+     * - Performs an UPDATE if 'id' is set.
+     * * Note: Uses VM Static Fallback to call the static 'table()' method
+     * from this instance context.
+     */
+    public save() {
+        // Reflection: Inspect the object to build columns and values
+        var props = this.get_properties()
+
+        var cols = []
+        var placeholders = []
+        var values = []
+        var updates = []
+
+        foreach (p in props) {
+            // Filter out system fields (like metadata or ID)
+            if (!this.ignored_fields.contains(p)) {
+                var val = this.get_property(p)
+                
+                // Prepare INSERT data
+                cols.push(p)
+                placeholders.push("?")
+                values.push(val)
+                
+                // Prepare UPDATE data
+                updates.push("${p} = ?")
+            }
+        }
+
+        // 1. CREATE (INSERT)
+        if (this.id == null) {
+            // 'this.table()' calls User.table() via static fallback logic
+            var query = "INSERT INTO ${this.table()} (" + cols.join(", ") + ") VALUES (" + placeholders.join(", ") + ");"
+            
+            print "[ORM] Insert: " + query
+            Sqlite.execute(Settings.db_conn, query, values)
+            
+            // TODO: Retrieve last_insert_rowid() to update this.id
+        } 
+        // 2. UPDATE
+        else {
+            values.push(this.id) // Add ID for the WHERE clause
+            
+            var query = "UPDATE ${this.table()} SET " + updates.join(", ") + " WHERE id = ?;"
+            
+            print "[ORM] Update: " + query
+            Sqlite.execute(Settings.db_conn, query, values)
+        }
+    }
+
+    /**
+     * Deletes the current record from the database.
+     */
+    public delete() {
+        if (this.id == null) {
+            return null
+        }
+        
+        var query = "DELETE FROM ${this.table()} WHERE id = ?;"
+        Sqlite.execute(Settings.db_conn, query, [this.id])
+        
+        this.id = null
+        print "[ORM] Deleted."
+    }
 }

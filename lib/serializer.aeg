@@ -1,0 +1,47 @@
+class Serializer {
+    public instance = null
+    public many = false
+    public fields = []
+
+    public init(instance, many) {
+        this.instance = instance
+        if (many == null) {
+            this.many = false
+        }
+        else {
+            this.many = many
+        }
+    }
+
+    public data() {
+        if (this.instance == null) {
+            return null
+        }
+
+        if (this.many) {
+            var results = []
+            foreach (item in this.instance) {
+                results.push(this.serialize_single(item))
+            }
+            return results
+        }
+        else {
+            return this.serialize_single(this.instance)
+        }
+    }
+
+    private serialize_single(obj) {
+        var d = {}
+
+        var obj_props = obj.get_properties()
+        
+        foreach (field in this.fields) {
+            if (obj_props.contains(field)) {
+                var val = obj.get_property(field)
+                d.insert(field, val)
+            }
+        }
+
+        return d
+    }
+}

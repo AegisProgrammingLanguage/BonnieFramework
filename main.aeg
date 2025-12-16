@@ -9,26 +9,41 @@ class HomeController implements RequestHandler {
     }
 }
 
-class ApiController implements RequestHandler {
-    public handle(req) {
-        return new Response("{ \"status\": \"ok\", \"engine\": \"Aegis\" }", 200)
-    }
-}
-
 class UserController implements RequestHandler {
     public handle(req) {
-        var user = new User()
-        var users = user.manager.all()
+        var users = User.all()
+
+        if (users.len() == 0) {
+            var u = new User({
+                username: "Ikigami",
+                age: 22
+            })
+            u.save() 
+            users = User.all()
+        }
+
+        var serializer = new UserSerializer(users, true)
+
         return render("templates/users.html", {
-            users: users
+            users: serializer.data()
         })
     }
 }
 
 class User extends Model {
-    init() {
-        this.tablename = "users"
-        this.manager = new Manager(this)
+    public username = ""
+    public age = 18
+
+    public static table() {
+        return "users"
+    }
+}
+
+class UserSerializer extends Serializer {
+    init (instance, many) {
+        this.fields = ["id", "username", "age"]
+
+        super.init(instance, many)
     }
 }
 
@@ -38,12 +53,11 @@ func main() {
     Settings.database = "db.sqlite3"
     Settings.db_conn = Sqlite.open(Settings.database)
 
-    Sqlite.execute(Settings.db_conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL);", null)
+    Sqlite.execute(Settings.db_conn, "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username VARCHAR(255) NOT NULL, age INTEGER NOT NULL);", null)
 
     app.use(new StaticMiddleware("/static", "static"))
 
     app.get("/", new HomeController())
-    app.get("/api", new ApiController())
     app.get("/users", new UserController())
 
     app.run("127.0.0.1", 9000)
