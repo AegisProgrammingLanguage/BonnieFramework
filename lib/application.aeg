@@ -43,7 +43,7 @@ class Application {
                     foreach (mw in this.middlewares) {
                         var res = mw.handle(req)
                         if (res != null) {
-                            Socket.write(client_id, res.to_string())
+                            this.send_response(client_id, res)
                             handled = true
                             break
                         }
@@ -53,12 +53,11 @@ class Application {
                         if (this.routes.get(req.path)) {
                             var handler = this.routes.get(req.path)
                             var response = handler.handle(req)
-                            Socket.write(client_id, response.to_string())
+                            this.send_response(client_id, response)
                         }
                         else {
-                            var not_found = new Response("<h1>404 - Not Found</h1>")
-                            not_found.status_code = 404
-                            Socket.write(client_id, not_found.to_string())
+                            var not_found = new Response("<h1>404 - Not Found</h1>", 404)
+                            this.send_response(client_id, not_found)
                         }
                     }
                 }
@@ -68,5 +67,26 @@ class Application {
 
             Socket.close(client_id)
         }
+    }
+
+    private send_response(client_id, res) {
+        var body_to_send = res.body
+
+        // 1. NORMALISATION : Tout doit devenir des Bytes pour avoir la vraie taille
+        if (typeof(body_to_send) == "string") {
+            // "🌸".len() = 1, mais "🌸".to_bytes().len() = 4 !
+            body_to_send = body_to_send.to_bytes()
+        }
+
+        // 2. Mise à jour du Content-Length avec la taille en OCTETS
+        // On écrase ce qui a pu être calculé avant (qui était peut-être faux pour les Strings)
+        res.set_header("Content-Length", to_str(body_to_send.len()))
+
+        // 3. Envoi sécurisé
+        // get_headers_string() va utiliser les headers
+        Socket.write(client_id, res.get_headers_string()) 
+        
+        // On envoie le buffer d'octets (Texte converti ou Image brute)
+        Socket.write(client_id, body_to_send)
     }
 }

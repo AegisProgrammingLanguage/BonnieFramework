@@ -5,7 +5,7 @@ import "stdlib/file.aeg"
 func render(template_path: string, context: dict) -> Response {
     if (File.exists(template_path)) {
         var content = File.read(template_path)
-        return Response(Template.render(content, context))
+        return new Response(Template.render(content, context), 200)
     }
     else {
         print "[ERROR] Template ${template_path} not found."

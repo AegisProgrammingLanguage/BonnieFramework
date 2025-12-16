@@ -3,7 +3,7 @@ class Request {
     public path: string = "/"
     public headers = {}
     public body: string = ""
-    
+
     // Parses a raw HTTP string (e.g., "GET /home HTTP/1.1")
     init(raw_data: string) {
         var parts = raw_data.split("\r\n\r\n")
@@ -40,23 +40,44 @@ class Request {
 class Response {
     public status_code: int = 200
     public content_type: string = "text/html"
-    public body: string = ""
+    public headers = {}
+    public body: string = "text/plain"
 
-    init(body: string) {
-        // Default to 200 OK and HTML
-        this.status_code = 200
-        this.content_type = "text/html; charset=utf-8"
+    init(body, status) {
         this.body = body
+        if (status != null) {
+            this.status_code = status
+        }
+    }
+
+    public set_header(key, value) {
+        this.headers.insert(key, value)
+    }
+
+    public get_headers_string() {
+        var s = "HTTP/1.1 " + this.status_code + " OK\r\n"
+        
+        // On s'assure que Content-Type est défini
+        if (!this.headers.contains("Content-Type")) {
+            this.headers.insert("Content-Type", this.content_type)
+        }
+
+        // Calcul automatique de la taille du contenu
+        if (!this.headers.contains("Content-Length")) {
+            // .len() fonctionne sur String ET sur Bytes maintenant :)
+            this.headers.insert("Content-Length", to_str(this.body.len()))
+        }
+
+        foreach (key in this.headers.keys()) {
+            s += key + ": " + this.headers.get(key) + "\r\n"
+        }
+
+        s += "\r\n" // Fin des headers
+        return s
     }
 
     // Converts the object to a valid HTTP wire string
     public to_string() {
-        var res = "HTTP/1.1 ${this.status_code} OK\r\n"
-        res += "Content-Type: ${this.content_type}\r\n"
-        res += "Content-Length: ${len(this.body)}\r\n"
-        res += "Connection: close\r\n"
-        res += "\r\n" // End of headers
-        res += this.body
-        return res
+        return this.get_headers_string() + to_str(this.body)
     }
 }

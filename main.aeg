@@ -11,7 +11,7 @@ class HomeController implements RequestHandler {
 
 class ApiController implements RequestHandler {
     public handle(req) {
-        return new Response("{ \"status\": \"ok\", \"engine\": \"Aegis\" }")
+        return new Response("{ \"status\": \"ok\", \"engine\": \"Aegis\" }", 200)
     }
 }
 

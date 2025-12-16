@@ -1,5 +1,4 @@
-/* static/style.css */
-
+/* Général */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f0f2f5;
@@ -12,21 +11,28 @@ body {
 }
 
 h1 {
-    color: #4a90e2; /* Un joli bleu */
+    color: #4a90e2;
     text-transform: uppercase;
     letter-spacing: 2px;
     border-bottom: 2px solid #4a90e2;
     padding-bottom: 10px;
+    margin-bottom: 30px;
 }
 
 p {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     background: white;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box; /* Important pour que le padding ne dépasse pas */
 }
 
+/* Styles pour les Listes (Page d'accueil) */
 ul {
     list-style-type: none;
     padding: 0;
@@ -46,4 +52,59 @@ li {
 
 li:hover {
     transform: translateX(5px);
+}
+
+/* Styles pour les Tableaux (Page Users) */
+table {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #4a90e2;
+    color: white;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    transition: background-color 0.2s;
+}
+
+tbody tr:hover {
+    background-color: #f9fbfd;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Boutons de navigation */
+a.btn-back {
+    margin-top: 30px;
+    text-decoration: none;
+    color: #4a90e2;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: 2px solid #4a90e2;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+a.btn-back:hover {
+    background-color: #4a90e2;
+    color: white;
 }

@@ -26,29 +26,53 @@ class StaticMiddleware implements Middleware {
             var file_path = this.root + relative_path
 
             if (File.exists(file_path)) {
-                var content = File.read(file_path)
+                var content = null
+                var mime = "text/plain"
+                var is_binary = false
+
+                // Détection du type
+                if (file_path.ends_with(".css")) { 
+                    mime = "text/css" 
+                }
+                else if (file_path.ends_with(".js")) { 
+                    mime = "application/javascript" 
+                }
+                else if (file_path.ends_with(".html")) { 
+                    mime = "text/html" 
+                }
+                // Images -> BINAIRE
+                else if (file_path.ends_with(".png")) { 
+                    mime = "image/png"
+                    is_binary = true 
+                }
+                else if (file_path.ends_with(".jpg")) { 
+                    mime = "image/jpeg"
+                    is_binary = true 
+                }
+                else if (file_path.ends_with(".jpeg")) { 
+                    mime = "image/jpeg"
+                    is_binary = true 
+                }
+                else if (file_path.ends_with(".ico")) { 
+                    mime = "image/x-icon" 
+                    is_binary = true 
+                }
+
+                // Lecture adaptée
+                if (is_binary) {
+                    content = File.read_bytes(file_path)
+                } else {
+                    content = File.read(file_path)
+                }
 
                 if (content == null) {
-                    print "[Static] Warning: Impossible de lire le fichier (Binaire ?) -> " + file_path
-                    // On retourne null pour laisser le routeur gérer (404) ou on renvoie une erreur
-                    return null 
+                    print "[Static] Error reading " + file_path
+                    return null
                 }
 
-                var res = new Response(content)
-
-                if (file_path.ends_with(".css")) {
-                    res.content_type = "text/css"
-                }
-                else if (file_path.ends_with(".js")) {
-                    res.content_type = "application/javascript"
-                }
-                else if (file_path.ends_with(".png")) {
-                    res.content_type = "image/png"
-                }
-                else if (file_path.ends_with(".html")) {
-                    res.content_type = "text/html"
-                }
-
+                var res = new Response(content, null)
+                res.content_type = mime
+                
                 return res
             }
         }
