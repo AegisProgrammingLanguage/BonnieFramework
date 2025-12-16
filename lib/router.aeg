@@ -1,0 +1,54 @@
+class Route {
+    public method = "GET"
+    public path_parts = []
+    public handler = null
+
+    public init(method, path, handler) {
+        this.method = method
+        this.handler = handler
+        this.path_parts = this.split_path(path)
+    }
+
+    private split_path(path) {
+        var parts = path.split("/")
+        var clean = []
+        foreach (p in parts) {
+            if (p.len() > 0) {
+                clean.push(p)
+            }
+        }
+        return clean
+    }
+
+    public match(req_method, req_path) {
+        if (this.method != req_method) {
+            return null
+        }
+
+        var req_parts = this.split_path(req_path)
+
+        if (req_parts.len() != this.path_parts.len()) {
+            return null
+        }
+
+        var params = {}
+        var index = 0
+
+        foreach (part in this.path_parts) {
+            var req_part = req_parts.at(index)
+
+            if (part.starts_with(":")) {
+                var param_name = part.slice(1, part.len())
+                params.insert(param_name, req_part)
+            }
+            else {
+                if (part != req_part) {
+                    return null
+                }
+            }
+            index = index + 1
+        }
+
+        return params
+    }
+}

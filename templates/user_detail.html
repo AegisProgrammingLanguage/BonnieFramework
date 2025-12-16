@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil de {{ user.username }}</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; background: #f4f4f9; }
+        .card { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        h1 { color: #333; text-align: center; }
+        .field { margin-bottom: 1rem; }
+        .label { font-weight: bold; color: #666; }
+        .value { font-size: 1.2rem; }
+        .actions { margin-top: 2rem; text-align: center; }
+        a { text-decoration: none; color: #007bff; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Profil Utilisateur</h1>
+        
+        <div class="field">
+            <div class="label">ID</div>
+            <div class="value">#{{ user.id }}</div>
+        </div>
+
+        <div class="field">
+            <div class="label">Nom d'utilisateur</div>
+            <div class="value">{{ user.username }}</div>
+        </div>
+
+        <div class="field">
+            <div class="label">Âge</div>
+            <div class="value">{{ user.age }} ans</div>
+        </div>
+
+        <div class="actions">
+            <a href="/users">← Retour à la liste</a>
+        </div>
+    </div>
+
+</body>
+</html>

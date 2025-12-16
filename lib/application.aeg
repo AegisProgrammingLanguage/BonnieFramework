@@ -1,6 +1,7 @@
 import "stdlib/socket.aeg"
 import "lib/http.aeg"
 import "lib/middlewares/middleware.aeg"
+import "lib/router.aeg"
 import "packages/sqlite/sqlite.aeg"
 
 interface RequestHandler {
@@ -10,11 +11,18 @@ interface RequestHandler {
 class Application {
     public host: string = "127.0.0.1"
     public port: int = 8080
-    private routes: dict = {}
-    private middlewares: list = []
+
+    private routes = []
+    private middlewares = []
 
     public get(path, handler) {
-        this.routes.insert(path, handler)
+        var r = new Route("GET", path, handler)
+        this.routes.push(r)
+    }
+
+    public post(path, handler) {
+        var r = new Route("POST", path, handler)
+        this.routes.push(r)
     }
 
     public use(middleware) {
@@ -50,11 +58,25 @@ class Application {
                     }
 
                     if (!handled) {
-                        if (this.routes.get(req.path)) {
-                            var handler = this.routes.get(req.path)
+                        // 2. ROUTING DYNAMIQUE
+                        var found_route = null
+                        
+                        foreach (route in this.routes) {
+                            // On tente le match
+                            var params = route.match(req.method, req.path)
+                            
+                            if (params != null) {
+                                req.params = params
+                                found_route = route
+                                break
+                            }
+                        }
+
+                        if (found_route != null) {
+                            var handler = found_route.handler
                             var response = handler.handle(req)
                             this.send_response(client_id, response)
-                        }
+                        } 
                         else {
                             var not_found = new Response("<h1>404 - Not Found</h1>", 404)
                             this.send_response(client_id, not_found)

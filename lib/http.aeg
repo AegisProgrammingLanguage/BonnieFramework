@@ -3,6 +3,7 @@ class Request {
     public path: string = "/"
     public headers = {}
     public body: string = ""
+    public params = {}
 
     // Parses a raw HTTP string (e.g., "GET /home HTTP/1.1")
     init(raw_data: string) {

@@ -30,6 +30,35 @@ class UserController implements RequestHandler {
     }
 }
 
+class UserDetailController implements RequestHandler {
+    public handle(req) {
+        // 1. Récupération du paramètre d'URL
+        var id = req.params.get("id")
+        
+        // 2. Recherche en BDD (Active Record)
+        // Note: id est une string venant de l'URL, sqlite gère souvent la conversion,
+        // mais pour être propre on pourrait caster en int si on avait to_int()
+        var u = User.get({"id": id})
+
+        if (u == null) {
+            return new Response("User not found", 404)
+        }
+
+        // 3. Serialisation
+        var serializer = new UserSerializer(u, false) // false = objet unique
+
+        // 4. Préparation pour la vue (SERIALIZATION)
+        // On passe 'false' car c'est un objet unique, pas une liste
+        var serializer = new UserSerializer(u, false)
+        var user_data = serializer.data()
+
+        // 5. Rendu
+        return render("templates/user_detail.html", {
+            "user": user_data
+        })
+    }
+}
+
 class User extends Model {
     public username = ""
     public age = 18
@@ -59,6 +88,7 @@ func main() {
 
     app.get("/", new HomeController())
     app.get("/users", new UserController())
+    app.get("/users/:id", new UserDetailController())
 
     app.run("127.0.0.1", 9000)
 

@@ -24,7 +24,11 @@
                 {% for user in users %}
                 <tr>
                     <td><b>{{ user.id }}</b></td>
-                    <td>{{ user.username }}</td>
+                    <td>
+                        <a href="/users/{{ user.id }}">
+                            {{ user.username }}
+                        </a>
+                    </td>
                     <td>{{ user.age }}</td>
                 </tr>
                 {% endfor %}
